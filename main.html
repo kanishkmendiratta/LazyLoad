@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Lazy Load</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <style>
+    button {
+  text-decoration: none;
+  display: inline-block;
+  padding: 8px 16px;
+}
+
+button:hover {
+  background-color: #ddd;
+  color: black;
+}
+    .previous {
+  background-color: #f1f1f1;
+  color: black;
+}
+
+.next {
+  background-color: #f1f1f1;
+  color: black;
+}
+
+.round {
+  border-radius: 50%;
+}
+.capti{
+  inline-size: 25;
+  display: inline-block;
+  color: black;
+}
+  </style>
+</head>
+<body onload="load()">
+  
+<div class="container">
+  <h2><center>Lazy Load</center></h2>  
+  <div id="myCarousel" class="carousel slide" data-interval="15000" wrap data-ride="carousel" data-wrap="false">
+    <!-- Wrapper for slides -->
+    <center>
+      <div class="carousel-inner" id="car1">
+      </div>
+   </center>
+  </div>
+<div id="myCarouselcap" class="carousel slide" data-interval="false" data-ride="carousel" data-wrap="false">
+  <!-- Wrapper for slides -->
+  <center>
+    <div class="carousel-inner" id="car2">
+    </div>
+  </center>
+</div>
+<div id="myCarouselLink" class="carousel slide" data-interval="false" data-ride="carousel" data-wrap="false">
+  <!-- Wrapper for slides -->
+  <center>
+    <div class="carousel-inner" id="car3">
+    </div>
+  </center>
+</div>
+<center>
+  <button type="button" class="previous round" onclick="lef()" id="myBtn">&#8249;</button>
+<button type="button" class="next round" onclick="rig()" id="myBtn2">&#8250;</button>
+</center>
+</div>
+</body>
+</html>
+<script>
+  var pstart=0;
+  var pend;
+  var baseUrl='https://us-central1-saath-health.cloudfunctions.net/video_rest_services/homepage_instafeeds/v2/'
+    var curr;
+    var sc=700;
+    function load() {
+   const url=baseUrl+'initial';
+   $.getJSON(url, function(result){
+       console.log(result)
+       curr=result.end_cursor;
+       console.log(curr);
+       pend=result.items.length-1;
+       console.log("pend"+pend)
+
+       $("#myCarousel").carousel();
+       for(var i=0;i<result.items.length;i++){
+           var div1=document.createElement("div");
+           var div2=document.createElement("div");
+           var div3=document.createElement("div");
+           if(i==0){
+            div1.className="item active"
+            div2.className="item active"
+            div3.className="item active"
+           }
+           else{
+            div1.className="item"
+            div2.className="item"
+            div3.className="item"
+           }
+           var im1=document.createElement("img");
+           im1.src=result.items[i]._imageUrl;
+           im1.width= "500";
+           div1.appendChild(im1);
+
+           var capt=document.createElement("div");
+           var cap1=document.createElement("h4");
+           cap1.textContent=result.items[i]._caption;
+           capt.classList.add("capti");
+           capt.appendChild(cap1);
+           div2.appendChild(capt);
+
+           var li=document.createElement("div");
+           var a = document.createElement('a');
+            var linkText = document.createTextNode("Go to "+result.items[i]._type+" Post");
+            a.appendChild(linkText);
+            a.title = "Click here";
+            var lll=result.items[i]._linkUrl;
+            a.href = result.items[i]._linkUrl;
+            a.target='_blank';
+           li.appendChild(a);
+           div3.appendChild(li);
+
+           document.getElementById("car1").appendChild(div1);
+           document.getElementById("car2").appendChild(div2);
+           document.getElementById("car3").appendChild(div3);
+       }
+    });
+}
+async function lef(){
+  if(pstart!=0){
+  console.log(pstart);
+  await $("#myCarousel").carousel("prev");
+  await $("#myCarouselcap").carousel("prev");
+  await $("#myCarouselLink").carousel("prev");
+  }
+}
+function rig(){
+  if(pstart!==pend){
+  console.log(pstart);
+  $("#myCarousel").carousel("next");
+  //$("#myCarouselcap").carousel("next");
+  }
+}
+$("#myCarousel").on('slid.bs.carousel', function(event){
+  if(event.direction==='left'){
+      pstart+=1;
+    }
+    else{
+      pstart-=1;
+    }
+    if(pstart===pend){
+    var url=baseUrl+curr;
+    $.getJSON(url, function(result){
+       console.log(result)
+       curr=result.end_cursor;
+       console.log(curr);
+       pend+=result.items.length;
+       console.log("pend"+pend)
+
+       $("#myCarousel").carousel();
+       for(var i=0;i<result.items.length;i++){
+           var div1=document.createElement("div");
+           var div2=document.createElement("div");
+           var div3=document.createElement("div");
+            div1.className="item"
+            div2.className="item"
+            div3.className="item"
+           var im1=document.createElement("img");
+           im1.src=result.items[i]._imageUrl;
+           im1.width= "500";
+           div1.appendChild(im1);
+
+           var capt=document.createElement("div");
+           var cap1=document.createElement("h4");
+           cap1.textContent=result.items[i]._caption;
+           capt.classList.add("capti");
+           capt.appendChild(cap1);
+           div2.appendChild(capt);
+
+           var li=document.createElement("div");
+           var a = document.createElement('a');
+            var linkText = document.createTextNode("Go to "+result.items[i]._type+" Post");
+            a.appendChild(linkText);
+            a.title = "Click here";
+            a.href = result.items[i]._linkUrl;
+            a.target='_blank';
+           li.appendChild(a);
+           div3.appendChild(li);
+
+           document.getElementById("car1").appendChild(div1);
+           document.getElementById("car2").appendChild(div2);
+           document.getElementById("car3").appendChild(div3);
+       }
+    });
+  }
+  });
+  $("#myCarousel").on('slide.bs.carousel', function(event){
+    if(event.direction==='left'){
+      $("#myCarouselcap").carousel("next");
+      $("#myCarouselLink").carousel("next");
+    }
+  });
+</script>
